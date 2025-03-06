@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "Type Master",
+    "version": "1.0",
+    "description": "Master Typing on Any Webpage",
+    "permissions": ["activeTab", "contextMenus", "scripting"],
+    
+    "background": {
+      "service_worker": "background.js"
+    },
+    "commands": {
+      "start-typing-practice": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+Y",
+          "mac": "Command+Shift+Y"
+        },
+        "description": "Start typing practice"
+      }
+    }
+  }
