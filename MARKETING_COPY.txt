@@ -1,0 +1,30 @@
+Master Typing on Any Webpage
+
+Boost your typing skills effortlessly with TypeMaster, a Chrome extension that turns any webpage into your personal typing practice playground! Whether you’re a student, professional, or typing enthusiast, TypeMaster lets you hone your speed and accuracy directly on the content you’re already reading—no extra apps or websites needed.
+
+Why You’ll Love TypeMaster
+- Practice Anywhere: Transform articles, blogs, or any selected text into a typing exercise with a single click.
+- Auto-scrolling: The page automatically scrolls as you're typing so that the current text is always perfectly in view.
+- Real-Time Feedback: See your progress instantly with subtle color-coded cues—green for perfect, red for errors, and orange for corrections.
+- Smart Navigation: Skip filler text with Tab and move between paragraphs with enter.
+- Dark Mode Ready: Seamlessly adapts to light and dark websites—always easy on the eyes.
+- Accurate Stats: Track your words-per-minute (WPM) and accuracy in a sleek, draggable meter that only counts what you type.
+
+How to use TypeMaster
+- Install with one click
+- Select any text on any page
+- Right click and select "Start Typing Practice" or simply press Ctrl+Shift+Y
+- Type each character as it’s highlighted.
+- Fix mistakes with Backspace—corrected characters turn orange.
+- Use Enter to move between paragraphs (look for the ⏎ symbol).
+- Press Tab to skip filler section without having to type it all out.
+- Track Progress: Watch your WPM and accuracy in the bottom-right corner—drag it anywhere or hide it with a click.
+- Finish or Quit: Complete the text or hit Esc to exit anytime.
+
+Perfect For
+- Learners: Build typing confidence with real-world content.
+- Professionals: Sharpen skills during downtime on work-related pages.
+- Casual Users: Turn reading into a fun, productive challenge.
+
+Get Started Now
+Why settle for boring and inorganic typing drills? With TypeMaster, every webpage becomes a chance to improve—fast, fun, and free. Install today and type your way to mastery!
