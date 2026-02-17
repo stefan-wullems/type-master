@@ -2,9 +2,6 @@ import { setupDOM, createRenderer } from './dom'
 import { createStore } from './store'
 import { createInputHandler } from './input-handler'
 import { computeStats, type TypingStats } from './reducers/live-stats'
-import type { TypingTheme } from './theme'
-import { lightTheme } from './theme'
-
 export { type TypingStats }
 
 export interface TypingEngineEnv {
@@ -16,24 +13,23 @@ export interface TypingEngineOptions {
   range: Range
   env: TypingEngineEnv
   debug?: boolean
-  theme?: TypingTheme
   onStatsChange?: (stats: TypingStats) => void
   onComplete?: (stats: TypingStats) => void
 }
 
-export function createTypingEngine(options: TypingEngineOptions): { destroy: () => void; setTheme: (theme: TypingTheme) => void } {
-  const { range, env, debug = false, theme = lightTheme, onStatsChange, onComplete } = options
+export function createTypingEngine(options: TypingEngineOptions): { destroy: () => void; isDark: boolean } {
+  const { range, env, debug = false, onStatsChange, onComplete } = options
   let destroyed = false
 
   function log(...args: unknown[]) {
     if (debug) console.log('[TypingEngine]', ...args)
   }
 
-  const { characters, spans, destroy: destroyDOM, setTheme } = setupDOM(range, env, theme)
+  const { characters, spans, destroy: destroyDOM, isDark } = setupDOM(range, env)
   log('Total typing chars:', spans.length)
 
   if (!spans.length) {
-    return { destroy: () => {}, setTheme: () => {} }
+    return { destroy: () => {}, isDark: false }
   }
 
   // Mark first char as current
@@ -93,5 +89,5 @@ export function createTypingEngine(options: TypingEngineOptions): { destroy: () 
     destroyDOM()
   }
 
-  return { destroy, setTheme }
+  return { destroy, isDark }
 }

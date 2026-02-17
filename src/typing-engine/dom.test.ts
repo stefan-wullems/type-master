@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { setupDOM } from './dom'
 import type { TypingEngineEnv } from './engine'
-import { lightTheme } from './theme'
 
 function createEnv(doc: Document): TypingEngineEnv {
   return {
@@ -31,7 +30,7 @@ describe('setupDOM', () => {
   it('creates typing-char spans from text', () => {
     const { range, container: c } = makeRange(document, '<p>Hello</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     destroy = result.destroy
 
     expect(result.spans.length).toBe(6) // 5 chars + 1 enter
@@ -43,7 +42,7 @@ describe('setupDOM', () => {
   it('inserts enter markers at end of blocks', () => {
     const { range, container: c } = makeRange(document, '<p>Hi</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     destroy = result.destroy
 
     const lastChar = result.characters[result.characters.length - 1]
@@ -54,7 +53,7 @@ describe('setupDOM', () => {
   it('assigns block indices to characters', () => {
     const { range, container: c } = makeRange(document, '<p>A</p><p>B</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     destroy = result.destroy
 
     const aChar = result.characters.find(c => c.char === 'A')!
@@ -65,7 +64,7 @@ describe('setupDOM', () => {
   it('inserts enter markers for multiple blocks', () => {
     const { range, container: c } = makeRange(document, '<p>A</p><p>B</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     destroy = result.destroy
 
     const enters = result.characters.filter(c => c.isEnterRequired)
@@ -75,7 +74,7 @@ describe('setupDOM', () => {
   it('destroy restores original text nodes', () => {
     const { range, container: c } = makeRange(document, '<p>Hello</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     result.destroy()
     destroy = undefined
 
@@ -86,7 +85,7 @@ describe('setupDOM', () => {
   it('destroy removes style element', () => {
     const { range, container: c } = makeRange(document, '<p>Hi</p>')
     container = c
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
 
     const stylesBefore = Array.from(document.querySelectorAll('style')).filter(s =>
       s.textContent?.includes('typing-char')
@@ -108,7 +107,7 @@ describe('setupDOM', () => {
     container = container2
     const range = document.createRange()
     range.selectNodeContents(container2)
-    const result = setupDOM(range, createEnv(document), lightTheme)
+    const result = setupDOM(range, createEnv(document))
     destroy = result.destroy
 
     expect(result.spans).toHaveLength(0)

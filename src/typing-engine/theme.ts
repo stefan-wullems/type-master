@@ -22,6 +22,34 @@ export const darkTheme: TypingTheme = {
   enterMarker: { color: '#64748b' },
 }
 
+export function isDarkBackground(
+  el: Element,
+  getComputedStyle: (el: Element) => CSSStyleDeclaration,
+): boolean {
+  let current: Element | null = el
+  while (current) {
+    const bg = getComputedStyle(current).backgroundColor
+    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+      const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+      if (match) {
+        const [, r, g, b] = match.map(Number)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        return luminance < 0.5
+      }
+    }
+    current = current.parentElement
+  }
+  return false
+}
+
+export function detectTheme(
+  el: Element,
+  getComputedStyle: (el: Element) => CSSStyleDeclaration,
+): { theme: TypingTheme; isDark: boolean } {
+  const isDark = isDarkBackground(el, getComputedStyle)
+  return { theme: isDark ? darkTheme : lightTheme, isDark }
+}
+
 export function themeToCSS(theme: TypingTheme): string {
   return `
     .typing-char.current { outline: 1px solid ${theme.current.outline}; }

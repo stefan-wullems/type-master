@@ -1,28 +1,39 @@
-import { createTypingEngine, lightTheme, darkTheme } from './typing-engine'
-
-function isDarkBackground(el: Element): boolean {
-  let current: Element | null = el
-  while (current) {
-    const bg = window.getComputedStyle(current).backgroundColor
-    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
-      const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-      if (match) {
-        const [, r, g, b] = match.map(Number)
-        // Relative luminance approximation
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-        return luminance < 0.5
-      }
-    }
-    current = current.parentElement
-  }
-  // Fallback to OS preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-}
+import { createTypingEngine } from './typing-engine'
 
 function applyMeterTheme(meter: HTMLElement, isDark: boolean): void {
   meter.style.backgroundColor = isDark ? '#1e293b' : 'white'
   meter.style.color = isDark ? '#e2e8f0' : 'black'
   meter.style.border = `1px solid ${isDark ? '#475569' : 'black'}`
+}
+
+function makeDraggable(el: HTMLElement): void {
+  let offsetX = 0
+  let offsetY = 0
+  let dragging = false
+
+  el.style.cursor = 'grab'
+
+  el.addEventListener('mousedown', (e) => {
+    dragging = true
+    offsetX = e.clientX - el.getBoundingClientRect().left
+    offsetY = e.clientY - el.getBoundingClientRect().top
+    el.style.cursor = 'grabbing'
+    e.preventDefault()
+  })
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return
+    el.style.right = 'auto'
+    el.style.bottom = 'auto'
+    el.style.left = `${e.clientX - offsetX}px`
+    el.style.top = `${e.clientY - offsetY}px`
+  })
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return
+    dragging = false
+    el.style.cursor = 'grab'
+  })
 }
 
 async function startTypingPractice() {
@@ -41,11 +52,6 @@ async function startTypingPractice() {
     console.log('[TypeMaster] Range:', range.startContainer.nodeName, range.startOffset, '-', range.endContainer.nodeName, range.endOffset)
   }
 
-  const selectionEl = range.commonAncestorContainer instanceof Element
-    ? range.commonAncestorContainer
-    : range.commonAncestorContainer.parentElement ?? document.body
-  const dark = isDarkBackground(selectionEl)
-
   const meter = document.createElement('div')
   meter.id = 'typing-meter'
   meter.style.position = 'fixed'
@@ -53,14 +59,13 @@ async function startTypingPractice() {
   meter.style.right = '10px'
   meter.style.padding = '5px'
   meter.style.zIndex = '999999'
-  applyMeterTheme(meter, dark)
+  makeDraggable(meter)
   document.body.appendChild(meter)
 
   const engine = createTypingEngine({
     range,
     env: { document, getComputedStyle: (el: Element) => window.getComputedStyle(el) },
     debug,
-    theme: dark ? darkTheme : lightTheme,
     onStatsChange: (stats) => {
       meter.textContent = `WPM: ${stats.wpm} | Accuracy: ${stats.accuracy}%`
       if (debug) console.log('[TypeMaster] Stats update:', stats)
@@ -69,6 +74,8 @@ async function startTypingPractice() {
       meter.remove()
     },
   })
+
+  applyMeterTheme(meter, engine.isDark)
 
   if (debug) console.log('[TypeMaster] Engine created')
 

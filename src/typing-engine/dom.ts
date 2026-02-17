@@ -2,8 +2,7 @@ import type { TypingEngineEnv } from './engine'
 import type { CharacterDef, StoreState } from './store'
 import type { TypingEvent } from './events'
 import { CharStatus } from './reducers/cursor'
-import type { TypingTheme } from './theme'
-import { themeToCSS } from './theme'
+import { themeToCSS, detectTheme } from './theme'
 
 interface Modification {
   beforeNode: Text | null
@@ -18,13 +17,13 @@ export interface DOMSetupResult {
   characters: CharacterDef[]
   spans: HTMLSpanElement[]
   destroy: () => void
-  setTheme: (theme: TypingTheme) => void
+  isDark: boolean
 }
 
-export function setupDOM(range: Range, env: TypingEngineEnv, theme: TypingTheme): DOMSetupResult {
+export function setupDOM(range: Range, env: TypingEngineEnv): DOMSetupResult {
   const textNodes = getTextNodesInRange(range, env)
   if (!textNodes.length) {
-    return { characters: [], spans: [], destroy: () => {}, setTheme: () => {} }
+    return { characters: [], spans: [], destroy: () => {}, isDark: false }
   }
 
   const modifications: Modification[] = []
@@ -88,13 +87,14 @@ export function setupDOM(range: Range, env: TypingEngineEnv, theme: TypingTheme)
     }
   })
 
+  const ancestorEl = range.commonAncestorContainer instanceof Element
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement ?? env.document.body
+  const { theme, isDark } = detectTheme(ancestorEl, env.getComputedStyle)
+
   const styleElement = env.document.createElement('style')
   styleElement.textContent = themeToCSS(theme)
   env.document.head.appendChild(styleElement)
-
-  function setTheme(newTheme: TypingTheme) {
-    styleElement.textContent = themeToCSS(newTheme)
-  }
 
   function destroy() {
     modifications.forEach((mod) => {
@@ -111,7 +111,7 @@ export function setupDOM(range: Range, env: TypingEngineEnv, theme: TypingTheme)
     styleElement.remove()
   }
 
-  return { characters, spans: allSpans, destroy, setTheme }
+  return { characters, spans: allSpans, destroy, isDark }
 }
 
 function getTextNodesInRange(range: Range, env: TypingEngineEnv): Text[] {

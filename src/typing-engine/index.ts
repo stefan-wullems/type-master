@@ -1,5 +1,4 @@
 export { createTypingEngine, type TypingEngineEnv, type TypingEngineOptions, type TypingStats } from './engine'
-export { type TypingTheme, lightTheme, darkTheme } from './theme'
 export { normalizeChar } from './input-handler'
 export type { TypingEvent } from './events'
 export type { CharacterDef, StoreState, Store } from './store'
