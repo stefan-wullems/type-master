@@ -6,6 +6,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "dependencies": {
+    "@type-master/typing-engine": "*"
+  },
   "devDependencies": {
     "@types/chrome": "^0.1.36",
     "esbuild": "^0.25.0",

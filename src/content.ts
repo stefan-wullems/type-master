@@ -1,4 +1,4 @@
-import { createTypingEngine } from './typing-engine'
+import { createTypingEngine } from '@type-master/typing-engine'
 
 function applyMeterTheme(meter: HTMLElement, isDark: boolean): void {
   meter.style.backgroundColor = isDark ? '#1e293b' : 'white'
