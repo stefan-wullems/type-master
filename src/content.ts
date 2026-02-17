@@ -1,6 +1,21 @@
 import { createTypingEngine, lightTheme, darkTheme } from './typing-engine'
 
-function isDarkMode(): boolean {
+function isDarkBackground(el: Element): boolean {
+  let current: Element | null = el
+  while (current) {
+    const bg = window.getComputedStyle(current).backgroundColor
+    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+      const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+      if (match) {
+        const [, r, g, b] = match.map(Number)
+        // Relative luminance approximation
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        return luminance < 0.5
+      }
+    }
+    current = current.parentElement
+  }
+  // Fallback to OS preference
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
@@ -26,7 +41,10 @@ async function startTypingPractice() {
     console.log('[TypeMaster] Range:', range.startContainer.nodeName, range.startOffset, '-', range.endContainer.nodeName, range.endOffset)
   }
 
-  const dark = isDarkMode()
+  const selectionEl = range.commonAncestorContainer instanceof Element
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement ?? document.body
+  const dark = isDarkBackground(selectionEl)
 
   const meter = document.createElement('div')
   meter.id = 'typing-meter'
@@ -38,14 +56,6 @@ async function startTypingPractice() {
   applyMeterTheme(meter, dark)
   document.body.appendChild(meter)
 
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
-  function onColorSchemeChange(e: MediaQueryListEvent) {
-    const nowDark = e.matches
-    engine.setTheme(nowDark ? darkTheme : lightTheme)
-    applyMeterTheme(meter, nowDark)
-  }
-
   const engine = createTypingEngine({
     range,
     env: { document, getComputedStyle: (el: Element) => window.getComputedStyle(el) },
@@ -55,13 +65,10 @@ async function startTypingPractice() {
       meter.textContent = `WPM: ${stats.wpm} | Accuracy: ${stats.accuracy}%`
       if (debug) console.log('[TypeMaster] Stats update:', stats)
     },
-    onComplete: (stats) => {
-      mediaQuery.removeEventListener('change', onColorSchemeChange)
+    onComplete: () => {
       meter.remove()
     },
   })
-
-  mediaQuery.addEventListener('change', onColorSchemeChange)
 
   if (debug) console.log('[TypeMaster] Engine created')
 
