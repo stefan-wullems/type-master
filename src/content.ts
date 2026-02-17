@@ -1,6 +1,6 @@
 import { TypingEngine } from './typing-engine'
 
-function startTypingPractice() {
+async function startTypingPractice() {
   const selection = window.getSelection()
   if (!selection?.rangeCount) {
     alert('Please select some text first.')
@@ -8,7 +8,21 @@ function startTypingPractice() {
   }
 
   const range = selection.getRangeAt(0)
-  const engine = new TypingEngine(range, { document, getComputedStyle: window.getComputedStyle })
+
+  const { debug = false } = await chrome.storage.local.get('debug')
+  if (debug) {
+    console.log('[TypeMaster] Debug mode enabled')
+    console.log('[TypeMaster] Selection:', selection.toString().substring(0, 100))
+    console.log('[TypeMaster] Range:', range.startContainer.nodeName, range.startOffset, '-', range.endContainer.nodeName, range.endOffset)
+  }
+
+  const engine = new TypingEngine(
+    range,
+    { document, getComputedStyle: (el: Element) => window.getComputedStyle(el) },
+    debug,
+  )
+
+  if (debug) console.log('[TypeMaster] Engine created')
 
   const meter = document.createElement('div')
   meter.id = 'typing-meter'
@@ -23,6 +37,7 @@ function startTypingPractice() {
 
   engine.onStatsChange = (stats) => {
     meter.textContent = `WPM: ${stats.wpm} | Accuracy: ${stats.accuracy}%`
+    if (debug) console.log('[TypeMaster] Stats update:', stats)
   }
 
   engine.onComplete = () => {

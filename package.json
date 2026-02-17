@@ -2,7 +2,7 @@
   "name": "type-master-chrome-plugin",
   "private": true,
   "scripts": {
-    "build": "esbuild src/content.ts src/background.ts --bundle --outdir=dist --format=iife",
+    "build": "esbuild src/content.ts src/background.ts src/popup.ts --bundle --outdir=dist --format=iife",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -3,8 +3,11 @@
     "name": "Type Master",
     "version": "1.1",
     "description": "Master Typing on Any Webpage",
-    "permissions": ["activeTab", "contextMenus", "scripting"],
-    
+    "permissions": ["activeTab", "contextMenus", "scripting", "storage"],
+
+    "action": {
+      "default_popup": "popup.html"
+    },
     "background": {
       "service_worker": "dist/background.js"
     },

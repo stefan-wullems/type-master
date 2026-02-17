@@ -7,7 +7,7 @@ export interface TypingStats {
 
 export interface TypingEngineEnv {
   document: Document
-  getComputedStyle: typeof window.getComputedStyle
+  getComputedStyle: (el: Element) => CSSStyleDeclaration
 }
 
 export function normalizeChar(char: string): string {
@@ -33,6 +33,7 @@ export class TypingEngine {
   onComplete?: (stats: TypingStats) => void
 
   private env: TypingEngineEnv
+  private debug: boolean
   private allTypingChars: HTMLSpanElement[] = []
   private modifications: Modification[] = []
   private blockSpanMap: Map<Element, HTMLSpanElement[]> = new Map()
@@ -50,10 +51,12 @@ export class TypingEngine {
   private updateInterval: ReturnType<typeof setInterval>
   private destroyed = false
 
-  constructor(range: Range, env: TypingEngineEnv) {
+  constructor(range: Range, env: TypingEngineEnv, debug = false) {
     this.env = env
+    this.debug = debug
 
     const textNodes = this.getTextNodesInRange(range)
+    this.log('Text nodes found:', textNodes.length)
     if (!textNodes.length) return
 
     this.prepareDOM(textNodes, range)
@@ -61,6 +64,7 @@ export class TypingEngine {
     this.allTypingChars = Array.from(
       this.env.document.querySelectorAll('.typing-char')
     ) as HTMLSpanElement[]
+    this.log('Total typing chars:', this.allTypingChars.length)
 
     if (this.allTypingChars.length) {
       this.allTypingChars[0].classList.add('current')
@@ -82,9 +86,14 @@ export class TypingEngine {
     this.updateInterval = setInterval(() => this.updateStats(), 1000)
   }
 
+  private log(...args: unknown[]): void {
+    if (this.debug) console.log('[TypingEngine]', ...args)
+  }
+
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
+    this.log('Destroying engine')
 
     this.modifications.forEach((mod) => {
       const { beforeNode, wrapper, afterNode, originalContent, parent, nextSibling } = mod
@@ -108,11 +117,14 @@ export class TypingEngine {
   private getClosestBlockAncestor(node: Node): Element {
     let current: Node | null = node
     while (current && current.nodeType === 1) {
-      if (this.env.getComputedStyle(current as Element).display === 'block') {
+      const display = this.env.getComputedStyle(current as Element).display
+      this.log('getClosestBlockAncestor: checking', (current as Element).tagName, 'display:', display)
+      if (display === 'block') {
         return current as Element
       }
       current = current.parentNode
     }
+    this.log('getClosestBlockAncestor: fell through to body')
     return this.env.document.body
   }
 
@@ -154,11 +166,13 @@ export class TypingEngine {
   }
 
   private prepareDOM(textNodes: Text[], range: Range): void {
+    this.log('prepareDOM: processing', textNodes.length, 'text nodes')
     for (const textNode of textNodes) {
       const { start, end } = this.getSelectedIndices(textNode, range)
       const originalContent = textNode.textContent!
       const selectedText = originalContent.substring(start, end)
 
+      this.log('prepareDOM: node text:', JSON.stringify(selectedText))
       const wrapper = this.env.document.createElement('span')
       wrapper.innerHTML = selectedText
         .split('')
@@ -193,6 +207,7 @@ export class TypingEngine {
   }
 
   private insertEnterMarkers(): void {
+    this.log('insertEnterMarkers: starting')
     const allTypingSpans = this.env.document.querySelectorAll('.typing-char')
     const blockToLastSpan = new Map<Element, Element>()
 
@@ -207,6 +222,7 @@ export class TypingEngine {
       }
     })
 
+    this.log('insertEnterMarkers: inserting', blockToLastSpan.size, 'markers')
     blockToLastSpan.forEach((lastSpan) => {
       const enterSpan = this.env.document.createElement('span')
       enterSpan.className = 'typing-char enter-required'
@@ -231,12 +247,14 @@ export class TypingEngine {
       this.totalKeystrokes > 0
         ? Math.round((this.correctKeystrokes / this.totalKeystrokes) * 100)
         : 100
-    return {
+    const stats = {
       wpm,
       accuracy,
       totalKeystrokes: this.totalKeystrokes,
       correctKeystrokes: this.correctKeystrokes,
     }
+    this.log('getStats:', stats)
+    return stats
   }
 
   private updateStats(): void {
@@ -289,6 +307,7 @@ export class TypingEngine {
 
     if (event.key.length === 1 || event.key === 'Enter') {
       event.preventDefault()
+      this.log('handleKeydown: key:', event.key, 'index:', this.currentIndex)
       if (!this.typingStarted) {
         this.typingStarted = true
         this.startTime = Date.now()
@@ -318,6 +337,7 @@ export class TypingEngine {
       } else {
         const expectedChar = normalizeChar(currentSpan.textContent!)
         const typedChar = normalizeChar(event.key)
+        this.log('handleKeydown: expected:', JSON.stringify(expectedChar), 'typed:', JSON.stringify(typedChar))
         if (typedChar === expectedChar) {
           if (currentSpan.classList.contains('was-incorrect')) {
             currentSpan.classList.add('corrected')
@@ -351,7 +371,9 @@ export class TypingEngine {
     if (this.currentIndex < this.allTypingChars.length) {
       this.allTypingChars[this.currentIndex].classList.add('current')
       this.scrollToCurrent()
+      this.log('advanceCursor: new index:', this.currentIndex)
     } else {
+      this.log('advanceCursor: completed')
       const stats = this.getStats()
       this.onComplete?.(stats)
       this.destroy()
@@ -374,6 +396,7 @@ export class TypingEngine {
     }
 
     if (foundNextBlock) {
+      this.log('skipToNextBlock: jumping from', this.currentIndex, 'to', nextBlockIndex)
       this.allTypingChars[this.currentIndex].classList.remove('current')
       this.currentIndex = nextBlockIndex
       this.allTypingChars[this.currentIndex].classList.add('current')
